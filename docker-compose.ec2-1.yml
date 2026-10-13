@@ -1,0 +1,27 @@
+# EC2-1: API Gateway + Nginx load balancer
+services:
+  gateway:
+    build: ./gateway
+    ports: ["8080:8080"]
+    restart: unless-stopped
+    environment:
+      PORT: 8080
+      JWT_SECRET: ${JWT_SECRET}
+      REGISTRATION_URL: http://${EC2_2_IP}:8081
+      LOGIN_URL: http://${EC2_2_IP}:8082
+      MENU_URL: http://${EC2_2_IP}:8083
+      ORDER_URL: http://nginx:80
+    depends_on: [nginx]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    environment:
+      EC2_3_IP: ${EC2_3_IP}
+    volumes:
+      - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro

@@ -1,0 +1,42 @@
+# EC2-2: Registration + Login + Menu
+services:
+  registration:
+    build: ./registration
+    ports: ["8081:8081"]
+    restart: unless-stopped
+    environment:
+      PORT: 8081
+      MONGO_URI: mongodb://${EC2_3_IP}:27017/foodapp
+      ADMIN_KEY: ${ADMIN_KEY}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  login:
+    build: ./login
+    ports: ["8082:8082"]
+    restart: unless-stopped
+    environment:
+      PORT: 8082
+      MONGO_URI: mongodb://${EC2_3_IP}:27017/foodapp
+      JWT_SECRET: ${JWT_SECRET}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8082/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  menu:
+    build: ./menu
+    ports: ["8083:8083"]
+    restart: unless-stopped
+    environment:
+      PORT: 8083
+      MONGO_URI: mongodb://${EC2_3_IP}:27017/foodapp
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8083/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

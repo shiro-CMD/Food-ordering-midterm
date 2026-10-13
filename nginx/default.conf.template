@@ -1,0 +1,17 @@
+upstream order_pool {
+    # round-robin across both Order containers on EC2-3
+    server ${EC2_3_IP}:8085 max_fails=2 fail_timeout=10s;
+    server ${EC2_3_IP}:8095 max_fails=2 fail_timeout=10s;
+}
+
+server {
+    listen 80;
+
+    location / {
+        proxy_pass http://order_pool;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_next_upstream error timeout http_502 http_503;
+        add_header X-Upstream $upstream_addr always;
+    }
+}

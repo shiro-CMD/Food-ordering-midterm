@@ -1,0 +1,42 @@
+# EC2-3: MongoDB + 2 Order Service instances (load balanced)
+services:
+  mongo:
+    image: mongo:7
+    ports: ["27017:27017"]
+    restart: unless-stopped
+    volumes: ["mongo_data:/data/db"]
+
+  order1:
+    build: ./order
+    ports: ["8085:8085"]
+    restart: unless-stopped
+    environment:
+      PORT: 8085
+      INSTANCE_ID: order-1
+      MONGO_URI: mongodb://mongo:27017/foodapp
+      MENU_URL: http://${EC2_2_IP}:8083
+    depends_on: [mongo]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8085/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  order2:
+    build: ./order
+    ports: ["8095:8095"]
+    restart: unless-stopped
+    environment:
+      PORT: 8095
+      INSTANCE_ID: order-2
+      MONGO_URI: mongodb://mongo:27017/foodapp
+      MENU_URL: http://${EC2_2_IP}:8083
+    depends_on: [mongo]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8095/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  mongo_data:
